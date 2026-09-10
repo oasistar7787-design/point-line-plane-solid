@@ -1,0 +1,1670 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>点动成线 · 线动成面 · 面动成体</title>
+    <style>
+:root {
+  color-scheme: light;
+  --ink: #172033;
+  --muted: #5c667a;
+  --panel: #ffffff;
+  --line: #d8dfeb;
+  --blue: #2364d2;
+  --blue-soft: #dcecff;
+  --green: #167a62;
+  --amber: #c78314;
+  --red: #c94b4b;
+  --canvas: #f7fafc;
+  --shadow: 0 18px 50px rgba(33, 45, 70, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(135deg, rgba(35, 100, 210, 0.1), transparent 38%),
+    linear-gradient(225deg, rgba(22, 122, 98, 0.08), transparent 42%),
+    #eef3f8;
+  color: var(--ink);
+  font-family:
+    "PingFang SC",
+    "Microsoft YaHei",
+    "Noto Sans CJK SC",
+    system-ui,
+    sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  appearance: none;
+  background: #f4f7fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 34px;
+  padding: 7px 10px;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+button:hover {
+  background: #eaf1fb;
+  transform: translateY(-1px);
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(35, 100, 210, 0.28);
+  outline-offset: 2px;
+}
+
+.app {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  height: 100vh;
+  min-height: 0;
+  padding: 12px;
+}
+
+.stage,
+.controls {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(216, 223, 235, 0.9);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.topbar {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 12px 16px 10px;
+}
+
+.eyebrow {
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0;
+  margin: 0 0 4px;
+}
+
+h1 {
+  font-size: clamp(20px, 2.2vw, 32px);
+  line-height: 1.12;
+  margin: 0;
+}
+
+.tabs {
+  background: #edf3fa;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(3, minmax(84px, 1fr));
+  padding: 4px;
+}
+
+.tab {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 800;
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+.tab.is-active {
+  background: var(--panel);
+  color: var(--blue);
+  box-shadow: 0 5px 16px rgba(35, 100, 210, 0.14);
+}
+
+.canvas-shell {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+#demoCanvas {
+  display: block;
+  height: 100%;
+  touch-action: none;
+  width: 100%;
+}
+
+.status-panel {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  left: 16px;
+  padding: 10px 12px;
+  position: absolute;
+  top: 16px;
+}
+
+.status-panel span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.status-panel strong {
+  color: var(--blue);
+  font-size: 20px;
+}
+
+.controls {
+  align-content: start;
+  display: grid;
+  gap: 9px;
+  min-height: 0;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.control-group {
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  padding-bottom: 9px;
+}
+
+.control-group:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.control-title {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.button-row {
+  display: grid;
+  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.motion-toggle {
+  background: #edf3fa;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 4px;
+}
+
+.motion-toggle button {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.motion-toggle button.is-selected {
+  background: #ffffff;
+  color: var(--blue);
+  box-shadow: 0 5px 16px rgba(35, 100, 210, 0.14);
+}
+
+.primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.primary:hover {
+  background: #1957bc;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+input[type="range"] {
+  accent-color: var(--blue);
+  width: 100%;
+}
+
+.preset-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preset-grid button {
+  min-height: 34px;
+}
+
+.preset-grid button.is-selected {
+  background: var(--blue-soft);
+  border-color: rgba(35, 100, 210, 0.45);
+  color: var(--blue);
+  font-weight: 900;
+}
+
+.designer {
+  aspect-ratio: 1 / 0.58;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#designerCanvas {
+  display: block;
+  height: 100%;
+  touch-action: none;
+  width: 100%;
+}
+
+.custom-panel {
+  display: none;
+}
+
+.custom-panel.is-visible {
+  display: grid;
+}
+
+body:not(.surface-mode) .surface-only {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  body {
+    overflow: hidden;
+  }
+
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .canvas-shell {
+    min-height: 0;
+  }
+
+  .controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding: 10px;
+  }
+
+  .tabs,
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .canvas-shell {
+    min-height: 0;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="stage">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">数学可视化教具</p>
+            <h1>点动成线 · 线动成面 · 面动成体</h1>
+          </div>
+          <div class="tabs" role="tablist" aria-label="演示过程">
+            <button class="tab is-active" type="button" data-mode="point">点 → 线</button>
+            <button class="tab" type="button" data-mode="line">线 → 面</button>
+            <button class="tab" type="button" data-mode="surface">面 → 体</button>
+          </div>
+        </header>
+
+        <div class="canvas-shell">
+          <canvas id="demoCanvas" aria-label="几何运动可视化画布"></canvas>
+          <div class="status-panel">
+            <span id="modeLabel">点动成线</span>
+            <strong id="progressLabel">0°</strong>
+          </div>
+        </div>
+      </section>
+
+      <aside class="controls" aria-label="控制面板">
+        <div class="control-group">
+          <div class="control-title">播放</div>
+          <div class="button-row">
+            <button id="playButton" class="primary" type="button">播放</button>
+            <button id="resetButton" type="button">复位</button>
+          </div>
+          <label class="field">
+            <span>过程进度</span>
+            <input id="progressRange" type="range" min="0" max="100" value="0" />
+          </label>
+          <label class="field">
+            <span>速度</span>
+            <input id="speedRange" type="range" min="1" max="8" value="4" />
+          </label>
+        </div>
+
+        <div class="control-group surface-only">
+          <div class="control-title">成体方式</div>
+          <div class="motion-toggle" id="motionToggle" role="group" aria-label="面动成体方式">
+            <button type="button" data-motion="rotate" class="is-selected">旋转成体</button>
+            <button type="button" data-motion="translate">平移成体</button>
+          </div>
+        </div>
+
+        <div class="control-group surface-only">
+          <div class="control-title">常用平面</div>
+          <div class="preset-grid" id="presetGrid">
+            <button type="button" data-shape="rectangle" class="is-selected">矩形</button>
+            <button type="button" data-shape="triangle">直角三角形</button>
+            <button type="button" data-shape="semicircle">半圆</button>
+            <button type="button" data-shape="trapezoid">梯形</button>
+            <button type="button" data-shape="custom">自定义</button>
+          </div>
+        </div>
+
+        <div class="control-group custom-panel surface-only" id="customPanel">
+          <div class="control-title">自定义平面</div>
+          <div class="designer">
+            <canvas id="designerCanvas" aria-label="自定义平面编辑画布"></canvas>
+          </div>
+          <div class="button-row">
+            <button id="clearCustomButton" type="button">清空</button>
+            <button id="sampleCustomButton" type="button">示例</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+    <script>
+const demoCanvas = document.querySelector("#demoCanvas");
+const designerCanvas = document.querySelector("#designerCanvas");
+const modeLabel = document.querySelector("#modeLabel");
+const progressLabel = document.querySelector("#progressLabel");
+const progressRange = document.querySelector("#progressRange");
+const speedRange = document.querySelector("#speedRange");
+const playButton = document.querySelector("#playButton");
+const resetButton = document.querySelector("#resetButton");
+const presetGrid = document.querySelector("#presetGrid");
+const motionToggle = document.querySelector("#motionToggle");
+const customPanel = document.querySelector("#customPanel");
+const clearCustomButton = document.querySelector("#clearCustomButton");
+const sampleCustomButton = document.querySelector("#sampleCustomButton");
+const tabs = [...document.querySelectorAll(".tab")];
+
+const ctx = demoCanvas.getContext("2d");
+const designerCtx = designerCanvas.getContext("2d");
+
+const state = {
+  mode: "point",
+  shape: "rectangle",
+  surfaceMotion: "rotate",
+  progress: 0,
+  playing: false,
+  speed: 4,
+  yaw: -0.52,
+  pitch: 0.28,
+  zoom: 1,
+  draggingView: false,
+  startX: 0,
+  startY: 0,
+  startYaw: 0,
+  startPitch: 0,
+  customPoints: [
+    { x: 0.18, y: 0.78 },
+    { x: 0.64, y: 0.72 },
+    { x: 0.76, y: 0.42 },
+    { x: 0.34, y: 0.23 },
+  ],
+  customBends: [0, 0, 0, 0],
+  activePoint: -1,
+  activeSegment: -1,
+  activePointWasExisting: false,
+  customPointerStart: null,
+  customPointerMoved: false,
+};
+
+const labels = {
+  point: "点动成线",
+  line: "线动成面",
+  surface: "面动成体",
+};
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function ease(t) {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
+function smoothstep(edge0, edge1, value) {
+  const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+function normalizeAngle(angle) {
+  const fullTurn = Math.PI * 2;
+  return ((angle + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
+}
+
+function fitCanvas(canvas, context) {
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  const width = Math.max(1, Math.floor(rect.width * ratio));
+  const height = Math.max(1, Math.floor(rect.height * ratio));
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  return rect;
+}
+
+function clear(context, rect) {
+  context.clearRect(0, 0, rect.width, rect.height);
+}
+
+function drawGrid(context, rect, centerX, centerY, spacing, alpha = 0.5) {
+  context.save();
+  context.strokeStyle = `rgba(116, 132, 158, ${alpha})`;
+  context.lineWidth = 1;
+  for (let x = centerX % spacing; x < rect.width; x += spacing) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x, rect.height);
+    context.stroke();
+  }
+  for (let y = centerY % spacing; y < rect.height; y += spacing) {
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(rect.width, y);
+    context.stroke();
+  }
+  context.restore();
+}
+
+function drawArrow(context, x1, y1, x2, y2, color) {
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  context.save();
+  context.strokeStyle = color;
+  context.fillStyle = color;
+  context.lineWidth = 3;
+  context.lineCap = "round";
+  context.beginPath();
+  context.moveTo(x1, y1);
+  context.lineTo(x2, y2);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(x2, y2);
+  context.lineTo(x2 - Math.cos(angle - 0.45) * 13, y2 - Math.sin(angle - 0.45) * 13);
+  context.lineTo(x2 - Math.cos(angle + 0.45) * 13, y2 - Math.sin(angle + 0.45) * 13);
+  context.closePath();
+  context.fill();
+  context.restore();
+}
+
+function drawPointToLine(rect) {
+  const t = ease(state.progress);
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+  const length = Math.min(rect.width * 0.66, 680);
+  const left = cx - length / 2;
+  const right = cx + length / 2;
+  const x = left + length * t;
+
+  drawGrid(ctx, rect, cx, cy, 42, 0.23);
+  drawArrow(ctx, left - 26, cy + 78, right + 36, cy + 78, "#167a62");
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineWidth = 16;
+  ctx.strokeStyle = "rgba(35, 100, 210, 0.22)";
+  ctx.beginPath();
+  ctx.moveTo(left, cy);
+  ctx.lineTo(x, cy);
+  ctx.stroke();
+
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = "#2364d2";
+  ctx.beginPath();
+  ctx.moveTo(left, cy);
+  ctx.lineTo(x, cy);
+  ctx.stroke();
+
+  ctx.fillStyle = "#c94b4b";
+  ctx.shadowColor = "rgba(201, 75, 75, 0.38)";
+  ctx.shadowBlur = 18;
+  ctx.beginPath();
+  ctx.arc(x, cy, 17, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawLineToSurface(rect) {
+  const t = ease(state.progress);
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+  const width = Math.min(rect.width * 0.58, 600);
+  const height = Math.min(rect.height * 0.48, 330);
+  const top = cy - height / 2;
+  const bottom = cy + height / 2;
+  const left = cx - width / 2;
+  const sweep = width * t;
+
+  drawGrid(ctx, rect, cx, cy, 42, 0.23);
+  ctx.save();
+  ctx.fillStyle = "rgba(22, 122, 98, 0.16)";
+  ctx.strokeStyle = "rgba(22, 122, 98, 0.55)";
+  ctx.lineWidth = 2;
+  ctx.fillRect(left, top, sweep, height);
+  ctx.strokeRect(left, top, sweep, height);
+
+  ctx.strokeStyle = "#2364d2";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(left + sweep, top);
+  ctx.lineTo(left + sweep, bottom);
+  ctx.stroke();
+
+  drawArrow(ctx, left - 32, bottom + 52, left + width + 38, bottom + 52, "#c78314");
+  ctx.restore();
+}
+
+function rotate3D(point) {
+  const cy = Math.cos(state.yaw);
+  const sy = Math.sin(state.yaw);
+  const cx = Math.cos(state.pitch);
+  const sx = Math.sin(state.pitch);
+  const y1 = point.y * cx - point.z * sx;
+  const z1 = point.y * sx + point.z * cx;
+  const x2 = point.x * cy + z1 * sy;
+  const z2 = -point.x * sy + z1 * cy;
+  return { x: x2, y: y1, z: z2 };
+}
+
+function subtract3D(a, b) {
+  return {
+    x: a.x - b.x,
+    y: a.y - b.y,
+    z: a.z - b.z,
+  };
+}
+
+function cross3D(a, b) {
+  return {
+    x: a.y * b.z - a.z * b.y,
+    y: a.z * b.x - a.x * b.z,
+    z: a.x * b.y - a.y * b.x,
+  };
+}
+
+function normalize3D(vector) {
+  const length = Math.hypot(vector.x, vector.y, vector.z) || 1;
+  return {
+    x: vector.x / length,
+    y: vector.y / length,
+    z: vector.z / length,
+  };
+}
+
+function dot3D(a, b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+function faceNormal(points) {
+  const sideA = subtract3D(points[1], points[0]);
+  const sideB = subtract3D(points[2], points[0]);
+  return normalize3D(cross3D(sideA, sideB));
+}
+
+function project3D(point, rect) {
+  const p = rotate3D(point);
+  const scale = Math.min(rect.width, rect.height) * 0.28 * state.zoom;
+  const perspective = 4.9 / (4.9 - p.z);
+  return {
+    x: rect.width / 2 + p.x * scale * perspective,
+    y: rect.height / 2 - p.y * scale * perspective,
+    z: p.z,
+  };
+}
+
+function presetProfile(name) {
+  if (name === "triangle") {
+    return [
+      { r: 0, y: -1 },
+      { r: 0.95, y: -1 },
+      { r: 0, y: 1 },
+    ];
+  }
+  if (name === "semicircle") {
+    const points = [];
+    const count = 30;
+    for (let i = 0; i <= count; i += 1) {
+      const a = -Math.PI / 2 + (Math.PI * i) / count;
+      points.push({ r: Math.cos(a), y: Math.sin(a) });
+    }
+    points.push({ r: 0, y: -1 });
+    return points;
+  }
+  if (name === "trapezoid") {
+    return [
+      { r: 0, y: -1 },
+      { r: 0.96, y: -1 },
+      { r: 0.64, y: 1 },
+      { r: 0, y: 1 },
+    ];
+  }
+  if (name === "custom") {
+    return expandedCustomPoints().map((p) => ({
+      r: p.x <= 0.012 ? 0 : clamp(p.x * 1.35, 0.02, 1.35),
+      y: (0.5 - p.y) * 2.4,
+    }));
+  }
+  return [
+    { r: 0, y: -1 },
+    { r: 0.85, y: -1 },
+    { r: 0.85, y: 1 },
+    { r: 0, y: 1 },
+  ];
+}
+
+function customBend(index) {
+  return state.customBends[index] || 0;
+}
+
+function customArcControl(a, b, bend) {
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2;
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const length = Math.hypot(dx, dy) || 1;
+  return {
+    x: mx - (dy / length) * bend,
+    y: my + (dx / length) * bend,
+  };
+}
+
+function customArcPoint(a, b, t, bend) {
+  const control = customArcControl(a, b, bend);
+  const one = 1 - t;
+  return {
+    x: one * one * a.x + 2 * one * t * control.x + t * t * b.x,
+    y: one * one * a.y + 2 * one * t * control.y + t * t * b.y,
+  };
+}
+
+function expandedCustomPoints() {
+  const points = [];
+  const count = state.customPoints.length;
+  if (!count) return points;
+  state.customPoints.forEach((point, index) => {
+    points.push(point);
+    const next = state.customPoints[(index + 1) % count];
+    const bend = customBend(index);
+    if (count > 1 && Math.abs(bend) > 0.002) {
+      for (let step = 1; step < 8; step += 1) {
+        points.push(customArcPoint(point, next, step / 8, bend));
+      }
+    }
+  });
+  return points;
+}
+
+function buildSurface(profile, rect) {
+  if (profile.length < 2) {
+    return [];
+  }
+
+  const theta = Math.max(0.001, state.progress * Math.PI * 2);
+  const steps = 96;
+  const faces = [];
+  for (let i = 0; i < profile.length; i += 1) {
+    const a = profile[i];
+    const b = profile[(i + 1) % profile.length];
+    for (let j = 0; j < steps; j += 1) {
+      const ang1 = (theta * j) / steps;
+      const ang2 = (theta * (j + 1)) / steps;
+      const quad = [
+        pointOnRotation(a, ang1),
+        pointOnRotation(b, ang1),
+        pointOnRotation(b, ang2),
+        pointOnRotation(a, ang2),
+      ];
+      const projected = quad.map((p) => project3D(p, rect));
+      const rotatedNormal = normalize3D(rotate3D(faceNormal(quad)));
+      const depth = projected.reduce((sum, p) => sum + p.z, 0) / projected.length;
+      faces.push({ projected, depth, normal: rotatedNormal });
+    }
+  }
+  return faces.sort((a, b) => a.depth - b.depth);
+}
+
+function pointOnRotation(profilePoint, angle) {
+  return {
+    x: profilePoint.r * Math.cos(angle),
+    y: profilePoint.y,
+    z: profilePoint.r * Math.sin(angle),
+  };
+}
+
+function drawDashedAxis(rect) {
+  const top = project3D({ x: 0, y: 1.62, z: 0 }, rect);
+  const bottom = project3D({ x: 0, y: -1.62, z: 0 }, rect);
+  ctx.save();
+  ctx.strokeStyle = "rgba(13, 23, 42, 0.86)";
+  ctx.lineWidth = 3;
+  ctx.setLineDash([10, 8]);
+  ctx.beginPath();
+  ctx.moveTo(top.x, top.y);
+  ctx.lineTo(bottom.x, bottom.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "800 15px system-ui, sans-serif";
+  ctx.fillText("旋转轴", top.x + 12, top.y + 16);
+  ctx.restore();
+}
+
+function drawProfile(profile, rect) {
+  if (profile.length === 0) {
+    return;
+  }
+
+  const points = profile.map((p) => project3D({ x: p.r, y: p.y, z: 0 }, rect));
+  ctx.save();
+  ctx.fillStyle = "rgba(201, 75, 75, 0.22)";
+  ctx.strokeStyle = "#c94b4b";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  points.forEach((p, index) => {
+    if (index === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  });
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  for (const p of points) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawObjectShadow(rect) {
+  const centerX = rect.width / 2 + Math.sin(state.yaw) * 34;
+  const centerY = rect.height / 2 + Math.min(rect.width, rect.height) * 0.31;
+  const radiusX = Math.min(rect.width, rect.height) * 0.27;
+  const radiusY = Math.min(rect.width, rect.height) * 0.068;
+
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.scale(1, radiusY / radiusX);
+  const gradient = ctx.createRadialGradient(0, 0, 1, 0, 0, radiusX);
+  gradient.addColorStop(0, "rgba(23, 32, 51, 0.34)");
+  gradient.addColorStop(0.5, "rgba(23, 32, 51, 0.17)");
+  gradient.addColorStop(1, "rgba(23, 32, 51, 0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, radiusX, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function surfaceFillStyle(face) {
+  const light = normalize3D({ x: -0.58, y: 0.82, z: 0.52 });
+  const lightAmount = Math.max(0, dot3D(face.normal, light));
+  const reflectedLight = Math.max(0, dot3D(face.normal, { x: 0.36, y: -0.16, z: -0.92 }));
+  const frontAmount = clamp((face.depth + 1.55) / 3.1, 0, 1);
+  const brightness = clamp(0.12 + lightAmount * 0.9 + reflectedLight * 0.12 + frontAmount * 0.18, 0.1, 1.18);
+  const r = Math.round(clamp(8 + 104 * brightness, 0, 255));
+  const g = Math.round(clamp(38 + 145 * brightness, 0, 255));
+  const b = Math.round(clamp(100 + 135 * brightness, 0, 255));
+  const alpha = 0.96 + frontAmount * 0.04;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function surfaceStrokeStyle(face) {
+  const frontAmount = clamp((face.depth + 1.55) / 3.1, 0, 1);
+  const progressFade = 1 - smoothstep(0.84, 1, state.progress);
+  return `rgba(4, 25, 70, ${(0.08 + frontAmount * 0.14) * progressFade})`;
+}
+
+function drawProjectedPolyline(points, rect, closePath = false) {
+  if (points.length < 2) return;
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    const projected = project3D(point, rect);
+    if (index === 0) ctx.moveTo(projected.x, projected.y);
+    else ctx.lineTo(projected.x, projected.y);
+  });
+  if (closePath) ctx.closePath();
+  ctx.stroke();
+}
+
+function drawDepthAwarePolyline(points, rect, closePath = false) {
+  if (points.length < 2) return;
+  const projected = points.map((point) => project3D(point, rect));
+  const segmentCount = closePath ? projected.length : projected.length - 1;
+  for (let i = 0; i < segmentCount; i += 1) {
+    const a = projected[i];
+    const b = projected[(i + 1) % projected.length];
+    const isFront = (a.z + b.z) / 2 >= -0.015;
+    ctx.save();
+    ctx.strokeStyle = isFront ? "rgba(2, 16, 46, 0.86)" : "rgba(2, 16, 46, 0.44)";
+    ctx.lineWidth = isFront ? 1.75 : 1.25;
+    ctx.setLineDash(isFront ? [] : [7, 7]);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawRotationRing(ring, profilePoint, rect) {
+  if (ring.length < 2) return;
+  const projected = ring.map((point) => project3D(point, rect));
+  const center = project3D({ x: 0, y: profilePoint.y, z: 0 }, rect);
+  for (let i = 0; i < projected.length - 1; i += 1) {
+    const a = projected[i];
+    const b = projected[i + 1];
+    const isFrontHalf = (a.y + b.y) / 2 >= center.y;
+    ctx.save();
+    ctx.strokeStyle = isFrontHalf ? "rgba(2, 16, 46, 0.84)" : "rgba(2, 16, 46, 0.42)";
+    ctx.lineWidth = isFrontHalf ? 1.7 : 1.2;
+    ctx.setLineDash(isFrontHalf ? [] : [7, 7]);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function keyRotationProfilePoints(profile) {
+  const points = [];
+  const seen = new Set();
+  const add = (point) => {
+    if (!point || point.r <= 0.015) return;
+    const key = `${Math.round(point.r * 100)}:${Math.round(point.y * 100)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    points.push(point);
+  };
+
+  let minY = profile[0];
+  let maxY = profile[0];
+  let maxR = profile[0];
+  profile.forEach((point) => {
+    if (point.y < minY.y) minY = point;
+    if (point.y > maxY.y) maxY = point;
+    if (point.r > maxR.r) maxR = point;
+  });
+  add(minY);
+  add(maxY);
+  add(maxR);
+  profile.forEach((point, index) => {
+    const prev = profile[(index - 1 + profile.length) % profile.length];
+    const next = profile[(index + 1) % profile.length];
+    if ((prev.y - point.y) * (next.y - point.y) < 0) add(point);
+    if ((prev.r - point.r) * (next.r - point.r) < 0) add(point);
+  });
+  return points;
+}
+
+function drawRotationEdges(profile, rect) {
+  const theta = Math.max(0.001, state.progress * Math.PI * 2);
+  const ringSteps = 112;
+  const frontEdgeColor = "rgba(2, 16, 46, 0.86)";
+  const smoothComplete = state.progress >= 0.995;
+
+  ctx.save();
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+
+  const ringKeys = new Set();
+  const ringPoints = smoothComplete ? keyRotationProfilePoints(profile) : profile;
+  ringPoints.forEach((point) => {
+    if (point.r <= 0.015) return;
+    const key = `${Math.round(point.r * 100)}:${Math.round(point.y * 100)}`;
+    if (ringKeys.has(key)) return;
+    ringKeys.add(key);
+    const ring = [];
+    for (let i = 0; i <= ringSteps; i += 1) {
+      const angle = (theta * i) / ringSteps;
+      ring.push(pointOnRotation(point, angle));
+    }
+    drawRotationRing(ring, point, rect);
+  });
+
+  ctx.strokeStyle = frontEdgeColor;
+  ctx.lineWidth = 2;
+  const angles = state.progress >= 0.995
+    ? [0]
+    : [0, theta];
+  angles.forEach((angle) => {
+    drawDepthAwarePolyline(profile.map((point) => pointOnRotation(point, angle)), rect, true);
+  });
+
+  ctx.restore();
+}
+
+function hollowConeEdges(profile) {
+  if (profile.length < 3 || state.shape !== "custom") return [];
+  let minY = profile[0].y;
+  let maxY = profile[0].y;
+  profile.forEach((point) => {
+    minY = Math.min(minY, point.y);
+    maxY = Math.max(maxY, point.y);
+  });
+
+  const cones = [];
+  for (let index = 0; index < profile.length; index += 1) {
+    const a = profile[index];
+    const b = profile[(index + 1) % profile.length];
+    const aOnAxis = a.r <= 0.015;
+    const bOnAxis = b.r <= 0.015;
+    if (aOnAxis === bOnAxis) continue;
+    const axisPoint = aOnAxis ? a : b;
+    const rimPoint = aOnAxis ? b : a;
+    const isLowerRecess = rimPoint.y < axisPoint.y - 0.04 && axisPoint.y < maxY - 0.05;
+    const isUpperRecess = rimPoint.y > axisPoint.y + 0.04 && axisPoint.y > minY + 0.05;
+    if (rimPoint.r > 0.06 && (isLowerRecess || isUpperRecess)) {
+      cones.push({ axisPoint, rimPoint });
+    }
+  }
+  return cones;
+}
+
+function drawHollowCone(cone, rect) {
+  const theta = Math.max(0.001, state.progress * Math.PI * 2);
+  const steps = 96;
+  const tip = { x: 0, y: cone.axisPoint.y, z: 0 };
+  const faces = [];
+  for (let i = 0; i < steps; i += 1) {
+    const ang1 = (theta * i) / steps;
+    const ang2 = (theta * (i + 1)) / steps;
+    const tri = [
+      tip,
+      pointOnRotation(cone.rimPoint, ang1),
+      pointOnRotation(cone.rimPoint, ang2),
+    ];
+    const projected = tri.map((point) => project3D(point, rect));
+    const depth = projected.reduce((sum, point) => sum + point.z, 0) / projected.length;
+    faces.push({ projected, depth });
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation = "multiply";
+  faces.sort((a, b) => a.depth - b.depth).forEach((face) => {
+    const frontAmount = clamp((face.depth + 1.4) / 2.8, 0, 1);
+    ctx.fillStyle = `rgba(6, 24, 58, ${0.11 + frontAmount * 0.16})`;
+    ctx.beginPath();
+    face.projected.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.closePath();
+    ctx.fill();
+  });
+  ctx.restore();
+
+  const ring = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const angle = (theta * i) / steps;
+    ring.push(pointOnRotation(cone.rimPoint, angle));
+  }
+  drawRotationRing(ring, cone.rimPoint, rect);
+}
+
+function drawHollowCones(profile, rect) {
+  hollowConeEdges(profile).forEach((cone) => drawHollowCone(cone, rect));
+}
+
+function addSurfaceHighlights(rect) {
+  const size = Math.min(rect.width, rect.height);
+  const highlightX = rect.width / 2 - size * 0.13 + Math.sin(state.yaw) * 22;
+  const highlightY = rect.height / 2 - size * 0.16;
+  const shadowX = rect.width / 2 + size * 0.16 + Math.sin(state.yaw) * 18;
+  const shadowY = rect.height / 2 + size * 0.14;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  let gradient = ctx.createRadialGradient(highlightX, highlightY, 1, highlightX, highlightY, size * 0.27);
+  gradient.addColorStop(0, "rgba(255, 255, 255, 0.28)");
+  gradient.addColorStop(0.42, "rgba(255, 255, 255, 0.1)");
+  gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, rect.width, rect.height);
+
+  ctx.globalCompositeOperation = "multiply";
+  gradient = ctx.createRadialGradient(shadowX, shadowY, 1, shadowX, shadowY, size * 0.34);
+  gradient.addColorStop(0, "rgba(7, 25, 62, 0.2)");
+  gradient.addColorStop(0.5, "rgba(7, 25, 62, 0.09)");
+  gradient.addColorStop(1, "rgba(7, 25, 62, 0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, rect.width, rect.height);
+  ctx.restore();
+}
+
+function drawSurfaceToSolid(rect) {
+  const profile = presetProfile(state.shape);
+
+  if (state.surfaceMotion === "translate") {
+    drawTranslationSolid(profile, rect);
+    return;
+  }
+
+  const faces = buildSurface(profile, rect);
+
+  drawObjectShadow(rect);
+  ctx.save();
+  const smoothComplete = state.progress >= 0.995;
+  for (const face of faces) {
+    ctx.fillStyle = surfaceFillStyle(face);
+    ctx.beginPath();
+    face.projected.forEach((p, index) => {
+      if (index === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    if (!smoothComplete) {
+      ctx.strokeStyle = surfaceStrokeStyle(face);
+      ctx.lineWidth = 0.45;
+      ctx.stroke();
+    }
+  }
+  addSurfaceHighlights(rect);
+  drawHollowCones(profile, rect);
+  drawRotationEdges(profile, rect);
+  ctx.restore();
+  drawProfile(profile, rect);
+  drawDashedAxis(rect);
+}
+
+function buildTranslationFaces(profile, rect) {
+  if (profile.length < 2) {
+    return [];
+  }
+
+  const depth = state.progress * 2.1;
+  const startZ = -depth / 2;
+  const endZ = depth / 2;
+  const faces = [];
+
+  if (depth <= 0.001) {
+    const flatFace = profile.map((p) => project3D({ x: p.r, y: p.y, z: 0 }, rect));
+    return [{
+      projected: flatFace,
+      depth: flatFace.reduce((sum, p) => sum + p.z, 0) / flatFace.length,
+      hue: 0.85,
+      cap: "end",
+    }];
+  }
+
+  for (let i = 0; i < profile.length; i += 1) {
+    const a = profile[i];
+    const b = profile[(i + 1) % profile.length];
+    const quad = [
+      { x: a.r, y: a.y, z: startZ },
+      { x: b.r, y: b.y, z: startZ },
+      { x: b.r, y: b.y, z: endZ },
+      { x: a.r, y: a.y, z: endZ },
+    ];
+    const projected = quad.map((p) => project3D(p, rect));
+    const depthValue = projected.reduce((sum, p) => sum + p.z, 0) / projected.length;
+    faces.push({ projected, depth: depthValue, hue: i / profile.length });
+  }
+
+  const startFace = profile.map((p) => project3D({ x: p.r, y: p.y, z: startZ }, rect));
+  const endFace = profile.map((p) => project3D({ x: p.r, y: p.y, z: endZ }, rect));
+  faces.push({
+    projected: startFace,
+    depth: startFace.reduce((sum, p) => sum + p.z, 0) / startFace.length,
+    hue: 0.1,
+    cap: "start",
+  });
+  faces.push({
+    projected: endFace,
+    depth: endFace.reduce((sum, p) => sum + p.z, 0) / endFace.length,
+    hue: 0.85,
+    cap: "end",
+  });
+
+  return faces.sort((a, b) => a.depth - b.depth);
+}
+
+function drawTranslationPath(rect) {
+  const depth = state.progress * 2.1;
+  if (depth <= 0.001) {
+    return;
+  }
+
+  const start = project3D({ x: -0.22, y: -1.25, z: -depth / 2 }, rect);
+  const end = project3D({ x: -0.22, y: -1.25, z: depth / 2 }, rect);
+  ctx.save();
+  ctx.strokeStyle = "rgba(199, 131, 20, 0.7)";
+  ctx.fillStyle = "#c78314";
+  ctx.lineWidth = 3;
+  ctx.setLineDash([8, 7]);
+  ctx.beginPath();
+  ctx.moveTo(start.x, start.y);
+  ctx.lineTo(end.x, end.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const angle = Math.atan2(end.y - start.y, end.x - start.x);
+  ctx.beginPath();
+  ctx.moveTo(end.x, end.y);
+  ctx.lineTo(end.x - Math.cos(angle - 0.45) * 12, end.y - Math.sin(angle - 0.45) * 12);
+  ctx.lineTo(end.x - Math.cos(angle + 0.45) * 12, end.y - Math.sin(angle + 0.45) * 12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.font = "700 14px system-ui, sans-serif";
+  ctx.fillText("平移方向", end.x + 10, end.y + 6);
+  ctx.restore();
+}
+
+function drawTranslationSolid(profile, rect) {
+  const faces = buildTranslationFaces(profile, rect);
+  drawTranslationPath(rect);
+
+  ctx.save();
+  for (const face of faces) {
+    const isMovingFace = face.cap === "end";
+    ctx.fillStyle = isMovingFace
+      ? "rgba(201, 75, 75, 0.28)"
+      : `rgba(35, 100, 210, ${0.24 + face.hue * 0.22})`;
+    ctx.strokeStyle = isMovingFace ? "#c94b4b" : "rgba(18, 76, 154, 0.28)";
+    ctx.lineWidth = isMovingFace ? 3 : 1.2;
+    ctx.beginPath();
+    face.projected.forEach((p, index) => {
+      if (index === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function render() {
+  const rect = fitCanvas(demoCanvas, ctx);
+  clear(ctx, rect);
+  if (state.mode === "point") drawPointToLine(rect);
+  if (state.mode === "line") drawLineToSurface(rect);
+  if (state.mode === "surface") drawSurfaceToSolid(rect);
+  renderDesigner();
+  updateLabels();
+}
+
+function updateLabels() {
+  modeLabel.textContent = state.mode === "surface"
+    ? state.surfaceMotion === "rotate" ? "面旋转成体" : "面平移成体"
+    : labels[state.mode];
+  progressLabel.textContent = state.mode === "surface" && state.surfaceMotion === "rotate"
+    ? `${Math.round(state.progress * 360)}°`
+    : `${Math.round(state.progress * 100)}%`;
+  progressRange.value = Math.round(state.progress * 100);
+  playButton.textContent = state.playing ? "暂停" : "播放";
+  document.body.classList.toggle("surface-mode", state.mode === "surface");
+  customPanel.classList.toggle("is-visible", state.mode === "surface" && state.shape === "custom");
+}
+
+function tick() {
+  if (state.playing) {
+    state.progress += 0.0019 * state.speed;
+    if (state.progress >= 1) {
+      state.progress = 1;
+      state.playing = false;
+    }
+    render();
+  }
+  requestAnimationFrame(tick);
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  state.progress = 0;
+  state.playing = false;
+  tabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.mode === mode));
+  render();
+}
+
+function renderDesigner() {
+  const rect = fitCanvas(designerCanvas, designerCtx);
+  clear(designerCtx, rect);
+  designerCtx.save();
+  designerCtx.fillStyle = "#f7fafc";
+  designerCtx.fillRect(0, 0, rect.width, rect.height);
+  drawDesignerGrid(rect);
+  const pts = state.customPoints.map((p) => designerToScreen(p, rect));
+
+  designerCtx.fillStyle = "rgba(201, 75, 75, 0.18)";
+  designerCtx.strokeStyle = "#c94b4b";
+  designerCtx.lineWidth = 2.5;
+  designerCtx.beginPath();
+  if (pts.length) {
+    designerCtx.moveTo(pts[0].x, pts[0].y);
+    pts.forEach((p, index) => {
+      const next = pts[(index + 1) % pts.length];
+      if (!next || pts.length < 2) return;
+      const bend = customBend(index);
+      if (Math.abs(bend) > 0.002) {
+        const control = designerToScreen(customArcControl(state.customPoints[index], state.customPoints[(index + 1) % state.customPoints.length], bend), rect);
+        designerCtx.quadraticCurveTo(control.x, control.y, next.x, next.y);
+      } else {
+        designerCtx.lineTo(next.x, next.y);
+      }
+    });
+    designerCtx.closePath();
+    designerCtx.fill();
+    designerCtx.stroke();
+  }
+
+  pts.forEach((p, index) => {
+    designerCtx.fillStyle = index === state.activePoint ? "#2364d2" : "#ffffff";
+    designerCtx.strokeStyle = index === state.activePoint ? "#2364d2" : "#c94b4b";
+    designerCtx.lineWidth = 3;
+    designerCtx.beginPath();
+    designerCtx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+    designerCtx.fill();
+    designerCtx.stroke();
+  });
+  designerCtx.restore();
+}
+
+function drawDesignerGrid(rect) {
+  const axisX = rect.width * 0.16;
+  designerCtx.strokeStyle = "rgba(92, 102, 122, 0.24)";
+  designerCtx.lineWidth = 1;
+  for (let x = axisX; x < rect.width; x += 24) {
+    designerCtx.beginPath();
+    designerCtx.moveTo(x, 0);
+    designerCtx.lineTo(x, rect.height);
+    designerCtx.stroke();
+  }
+  for (let y = 0; y < rect.height; y += 24) {
+    designerCtx.beginPath();
+    designerCtx.moveTo(axisX, y);
+    designerCtx.lineTo(rect.width, y);
+    designerCtx.stroke();
+  }
+  designerCtx.strokeStyle = "rgba(23, 32, 51, 0.55)";
+  designerCtx.lineWidth = 2;
+  designerCtx.setLineDash([7, 6]);
+  designerCtx.beginPath();
+  designerCtx.moveTo(axisX, 0);
+  designerCtx.lineTo(axisX, rect.height);
+  designerCtx.stroke();
+  designerCtx.setLineDash([]);
+
+  designerCtx.fillStyle = "rgba(35, 100, 210, 0.18)";
+  for (let x = axisX; x < rect.width; x += 24) {
+    for (let y = 0; y < rect.height; y += 24) {
+      designerCtx.beginPath();
+      designerCtx.arc(x, y, 1.8, 0, Math.PI * 2);
+      designerCtx.fill();
+    }
+  }
+}
+
+function designerToScreen(point, rect) {
+  return {
+    x: rect.width * (0.16 + point.x * 0.78),
+    y: rect.height * point.y,
+  };
+}
+
+function snapToDesignerGrid(x, y, rect) {
+  const axisX = rect.width * 0.16;
+  const spacing = 24;
+  const threshold = 9;
+  const nearestX = axisX + Math.round((x - axisX) / spacing) * spacing;
+  const nearestY = Math.round(y / spacing) * spacing;
+  const snapX = Math.abs(nearestX - x) <= threshold ? nearestX : x;
+  const snapY = Math.abs(nearestY - y) <= threshold ? nearestY : y;
+  return {
+    x: clamp(snapX, axisX, rect.width * 0.94),
+    y: clamp(snapY, rect.height * 0.05, rect.height * 0.95),
+  };
+}
+
+function screenToDesigner(x, y, rect) {
+  const snapped = snapToDesignerGrid(x, y, rect);
+  return {
+    x: clamp((snapped.x / rect.width - 0.16) / 0.78, 0, 1),
+    y: clamp(snapped.y / rect.height, 0.05, 0.95),
+  };
+}
+
+function screenToDesignerRaw(x, y, rect) {
+  return {
+    x: clamp((x / rect.width - 0.16) / 0.78, 0, 1),
+    y: clamp(y / rect.height, 0.05, 0.95),
+  };
+}
+
+function getCanvasPoint(event, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: event.clientX - rect.left, y: event.clientY - rect.top, rect };
+}
+
+function nearestCustomPoint(point, rect) {
+  let nearest = -1;
+  let best = 16;
+  state.customPoints.forEach((candidate, index) => {
+    const screen = designerToScreen(candidate, rect);
+    const distance = Math.hypot(screen.x - point.x, screen.y - point.y);
+    if (distance < best) {
+      best = distance;
+      nearest = index;
+    }
+  });
+  return nearest;
+}
+
+function nearestCustomSegment(point, rect) {
+  let nearest = -1;
+  let best = 14;
+  state.customPoints.forEach((candidate, index) => {
+    const next = state.customPoints[(index + 1) % state.customPoints.length];
+    if (!next || state.customPoints.length < 2) return;
+    const bend = customBend(index);
+    const samples = [];
+    if (Math.abs(bend) > 0.002) {
+      for (let step = 0; step <= 10; step += 1) {
+        samples.push(designerToScreen(customArcPoint(candidate, next, step / 10, bend), rect));
+      }
+    } else {
+      samples.push(designerToScreen(candidate, rect), designerToScreen(next, rect));
+    }
+    for (let i = 0; i < samples.length - 1; i += 1) {
+      const distance = distanceToSegment(point, samples[i], samples[i + 1]);
+      if (distance < best) {
+        best = distance;
+        nearest = index;
+      }
+    }
+  });
+  return nearest;
+}
+
+function distanceToSegment(point, a, b) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lengthSq = dx * dx + dy * dy || 1;
+  const t = clamp(((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSq, 0, 1);
+  const x = a.x + dx * t;
+  const y = a.y + dy * t;
+  return Math.hypot(point.x - x, point.y - y);
+}
+
+function segmentBendFromPointer(index, point) {
+  const a = state.customPoints[index];
+  const b = state.customPoints[(index + 1) % state.customPoints.length];
+  if (!a || !b) return 0;
+  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const nx = -dy / length;
+  const ny = dx / length;
+  return clamp((point.x - mid.x) * nx + (point.y - mid.y) * ny, -0.42, 0.42);
+}
+
+function syncCustomBends() {
+  while (state.customBends.length < state.customPoints.length) {
+    state.customBends.push(0);
+  }
+  if (state.customBends.length > state.customPoints.length) {
+    state.customBends.length = state.customPoints.length;
+  }
+}
+
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => setMode(tab.dataset.mode));
+});
+
+playButton.addEventListener("click", () => {
+  if (state.progress >= 1) state.progress = 0;
+  state.playing = !state.playing;
+  render();
+});
+
+resetButton.addEventListener("click", () => {
+  state.progress = 0;
+  state.playing = false;
+  state.zoom = 1;
+  render();
+});
+
+progressRange.addEventListener("input", () => {
+  state.progress = Number(progressRange.value) / 100;
+  state.playing = false;
+  render();
+});
+
+speedRange.addEventListener("input", () => {
+  state.speed = Number(speedRange.value);
+});
+
+motionToggle.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-motion]");
+  if (!button) return;
+  state.surfaceMotion = button.dataset.motion;
+  [...motionToggle.querySelectorAll("button")].forEach((item) => {
+    item.classList.toggle("is-selected", item === button);
+  });
+  render();
+});
+
+presetGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-shape]");
+  if (!button) return;
+  state.shape = button.dataset.shape;
+  [...presetGrid.querySelectorAll("button")].forEach((item) => {
+    item.classList.toggle("is-selected", item === button);
+  });
+  render();
+});
+
+demoCanvas.addEventListener("pointerdown", (event) => {
+  if (state.mode !== "surface") return;
+  state.draggingView = true;
+  state.startX = event.clientX;
+  state.startY = event.clientY;
+  state.startYaw = state.yaw;
+  state.startPitch = state.pitch;
+  demoCanvas.setPointerCapture(event.pointerId);
+});
+
+demoCanvas.addEventListener("pointermove", (event) => {
+  if (!state.draggingView) return;
+  state.yaw = normalizeAngle(state.startYaw + (event.clientX - state.startX) * 0.008);
+  state.pitch = normalizeAngle(state.startPitch + (event.clientY - state.startY) * 0.008);
+  render();
+});
+
+demoCanvas.addEventListener("pointerup", (event) => {
+  state.draggingView = false;
+  if (demoCanvas.hasPointerCapture(event.pointerId)) demoCanvas.releasePointerCapture(event.pointerId);
+});
+
+demoCanvas.addEventListener("pointercancel", () => {
+  state.draggingView = false;
+});
+
+demoCanvas.addEventListener("wheel", (event) => {
+  if (state.mode !== "surface") return;
+  event.preventDefault();
+  const direction = event.deltaY < 0 ? 1 : -1;
+  const factor = direction > 0 ? 1.1 : 0.9;
+  state.zoom = clamp(state.zoom * factor, 0.55, 2.4);
+  render();
+}, { passive: false });
+
+designerCanvas.addEventListener("pointerdown", (event) => {
+  if (state.shape !== "custom") return;
+  const point = getCanvasPoint(event, designerCanvas);
+  const nearest = nearestCustomPoint(point, point.rect);
+  const nearestSegment = nearestCustomSegment(point, point.rect);
+  if (nearest < 0 && nearestSegment >= 0) {
+    state.activeSegment = nearestSegment;
+    state.customPointerStart = { x: point.x, y: point.y };
+    state.customPointerMoved = false;
+    designerCanvas.setPointerCapture(event.pointerId);
+    render();
+    return;
+  }
+  state.customPointerStart = { x: point.x, y: point.y };
+  state.customPointerMoved = false;
+  state.activePointWasExisting = nearest >= 0;
+  if (nearest >= 0) {
+    state.activePoint = nearest;
+  } else if (state.customPoints.length < 10) {
+    state.customPoints.push(screenToDesigner(point.x, point.y, point.rect));
+    state.customBends.push(0);
+    state.activePoint = state.customPoints.length - 1;
+  }
+  syncCustomBends();
+  designerCanvas.setPointerCapture(event.pointerId);
+  render();
+});
+
+designerCanvas.addEventListener("pointermove", (event) => {
+  if (state.shape !== "custom") return;
+  const point = getCanvasPoint(event, designerCanvas);
+  if (
+    state.customPointerStart &&
+    Math.hypot(point.x - state.customPointerStart.x, point.y - state.customPointerStart.y) > 4
+  ) {
+    state.customPointerMoved = true;
+  }
+  if (state.activeSegment >= 0) {
+    state.customBends[state.activeSegment] = segmentBendFromPointer(
+      state.activeSegment,
+      screenToDesignerRaw(point.x, point.y, point.rect)
+    );
+    render();
+    return;
+  }
+  if (state.activePoint < 0) return;
+  state.customPoints[state.activePoint] = screenToDesigner(point.x, point.y, point.rect);
+  render();
+});
+
+designerCanvas.addEventListener("pointerup", (event) => {
+  if (
+    state.shape === "custom" &&
+    state.activePoint >= 0 &&
+    state.activePointWasExisting &&
+    !state.customPointerMoved &&
+    state.customPoints.length > 3
+  ) {
+    state.customPoints.splice(state.activePoint, 1);
+    state.customBends.splice(state.activePoint, 1);
+  }
+  syncCustomBends();
+  state.activePoint = -1;
+  state.activeSegment = -1;
+  state.activePointWasExisting = false;
+  state.customPointerStart = null;
+  state.customPointerMoved = false;
+  if (designerCanvas.hasPointerCapture(event.pointerId)) designerCanvas.releasePointerCapture(event.pointerId);
+  render();
+});
+
+designerCanvas.addEventListener("dblclick", (event) => {
+  if (state.shape !== "custom" || state.customPoints.length <= 3) return;
+  const point = getCanvasPoint(event, designerCanvas);
+  const nearest = nearestCustomPoint(point, point.rect);
+  if (nearest >= 0) {
+    state.customPoints.splice(nearest, 1);
+    state.customBends.splice(nearest, 1);
+    syncCustomBends();
+    render();
+  }
+});
+
+clearCustomButton.addEventListener("click", () => {
+  state.customPoints = [];
+  state.customBends = [];
+  render();
+});
+
+sampleCustomButton.addEventListener("click", () => {
+  state.customPoints = [
+    { x: 0.14, y: 0.82 },
+    { x: 0.7, y: 0.76 },
+    { x: 0.82, y: 0.46 },
+    { x: 0.5, y: 0.2 },
+    { x: 0.18, y: 0.34 },
+  ];
+  state.customBends = [0, 0.12, 0, -0.1, 0];
+  render();
+});
+
+window.addEventListener("resize", render);
+
+render();
+tick();
+
+    </script>
+  </body>
+</html>
