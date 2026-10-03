@@ -6,18 +6,18 @@
     <title>点动成线 · 线动成面 · 面动成体</title>
     <style>
 :root {
-  color-scheme: light;
-  --ink: #172033;
-  --muted: #5c667a;
-  --panel: #ffffff;
-  --line: #d8dfeb;
-  --blue: #2364d2;
-  --blue-soft: #dcecff;
-  --green: #167a62;
-  --amber: #c78314;
-  --red: #c94b4b;
-  --canvas: #f7fafc;
-  --shadow: 0 18px 50px rgba(33, 45, 70, 0.14);
+  color-scheme: dark;
+  --ink: #f8fafc;
+  --muted: #cbd5e1;
+  --panel: #1e293b;
+  --line: #526177;
+  --blue: #60a5fa;
+  --blue-soft: #223e64;
+  --green: #5ee0b5;
+  --amber: #fbbf4b;
+  --red: #fb7185;
+  --canvas: #111827;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
 }
 
 * {
@@ -33,9 +33,9 @@ body {
 body {
   margin: 0;
   background:
-    linear-gradient(135deg, rgba(35, 100, 210, 0.1), transparent 38%),
-    linear-gradient(225deg, rgba(22, 122, 98, 0.08), transparent 42%),
-    #eef3f8;
+    radial-gradient(circle at 12% 8%, rgba(59, 130, 246, 0.2), transparent 34%),
+    radial-gradient(circle at 88% 92%, rgba(16, 185, 129, 0.16), transparent 36%),
+    #070d19;
   color: var(--ink);
   font-family:
     "PingFang SC",
@@ -52,7 +52,7 @@ input {
 
 button {
   appearance: none;
-  background: #f4f7fb;
+  background: #263449;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
@@ -67,7 +67,7 @@ button {
 }
 
 button:hover {
-  background: #eaf1fb;
+  background: #33445c;
   transform: translateY(-1px);
 }
 
@@ -88,8 +88,8 @@ input:focus-visible {
 
 .stage,
 .controls {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(216, 223, 235, 0.9);
+  background: rgba(19, 29, 46, 0.96);
+  border: 1px solid rgba(91, 108, 132, 0.92);
   border-radius: 8px;
   box-shadow: var(--shadow);
 }
@@ -126,7 +126,7 @@ h1 {
 }
 
 .tabs {
-  background: #edf3fa;
+  background: #0f172a;
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;
@@ -146,7 +146,7 @@ h1 {
 }
 
 .tab.is-active {
-  background: var(--panel);
+  background: #2a3a51;
   color: var(--blue);
   box-shadow: 0 5px 16px rgba(35, 100, 210, 0.14);
 }
@@ -166,7 +166,7 @@ h1 {
 
 .status-panel {
   align-items: center;
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(15, 23, 42, 0.92);
   border: 1px solid var(--line);
   border-radius: 8px;
   display: flex;
@@ -221,7 +221,7 @@ h1 {
 }
 
 .motion-toggle {
-  background: #edf3fa;
+  background: #0f172a;
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;
@@ -238,7 +238,7 @@ h1 {
 }
 
 .motion-toggle button.is-selected {
-  background: #ffffff;
+  background: #2a3a51;
   color: var(--blue);
   box-shadow: 0 5px 16px rgba(35, 100, 210, 0.14);
 }
@@ -564,7 +564,7 @@ function drawPointToLine(rect) {
   const x = left + length * t;
 
   drawGrid(ctx, rect, cx, cy, 42, 0.23);
-  drawArrow(ctx, left - 26, cy + 78, right + 36, cy + 78, "#167a62");
+  drawArrow(ctx, left - 26, cy + 78, right + 36, cy + 78, "#5ee0b5");
 
   ctx.save();
   ctx.lineCap = "round";
@@ -576,13 +576,13 @@ function drawPointToLine(rect) {
   ctx.stroke();
 
   ctx.lineWidth = 5;
-  ctx.strokeStyle = "#2364d2";
+  ctx.strokeStyle = "#60a5fa";
   ctx.beginPath();
   ctx.moveTo(left, cy);
   ctx.lineTo(x, cy);
   ctx.stroke();
 
-  ctx.fillStyle = "#c94b4b";
+  ctx.fillStyle = "#fb7185";
   ctx.shadowColor = "rgba(201, 75, 75, 0.38)";
   ctx.shadowBlur = 18;
   ctx.beginPath();
@@ -610,7 +610,7 @@ function drawLineToSurface(rect) {
   ctx.fillRect(left, top, sweep, height);
   ctx.strokeRect(left, top, sweep, height);
 
-  ctx.strokeStyle = "#2364d2";
+  ctx.strokeStyle = "#60a5fa";
   ctx.lineWidth = 7;
   ctx.lineCap = "round";
   ctx.beginPath();
@@ -618,7 +618,7 @@ function drawLineToSurface(rect) {
   ctx.lineTo(left + sweep, bottom);
   ctx.stroke();
 
-  drawArrow(ctx, left - 32, bottom + 52, left + width + 38, bottom + 52, "#c78314");
+  drawArrow(ctx, left - 32, bottom + 52, left + width + 38, bottom + 52, "#fbbf4b");
   ctx.restore();
 }
 
@@ -825,7 +825,7 @@ function drawProfile(profile, rect) {
   const points = profile.map((p) => project3D({ x: p.r, y: p.y, z: 0 }, rect));
   ctx.save();
   ctx.fillStyle = "rgba(201, 75, 75, 0.22)";
-  ctx.strokeStyle = "#c94b4b";
+  ctx.strokeStyle = "#fb7185";
   ctx.lineWidth = 3;
   ctx.beginPath();
   points.forEach((p, index) => {
@@ -1198,7 +1198,7 @@ function drawTranslationPath(rect) {
   const end = project3D({ x: -0.22, y: -1.25, z: depth / 2 }, rect);
   ctx.save();
   ctx.strokeStyle = "rgba(199, 131, 20, 0.7)";
-  ctx.fillStyle = "#c78314";
+  ctx.fillStyle = "#fbbf4b";
   ctx.lineWidth = 3;
   ctx.setLineDash([8, 7]);
   ctx.beginPath();
@@ -1229,7 +1229,7 @@ function drawTranslationSolid(profile, rect) {
     ctx.fillStyle = isMovingFace
       ? "rgba(201, 75, 75, 0.28)"
       : `rgba(35, 100, 210, ${0.24 + face.hue * 0.22})`;
-    ctx.strokeStyle = isMovingFace ? "#c94b4b" : "rgba(18, 76, 154, 0.28)";
+    ctx.strokeStyle = isMovingFace ? "#fb7185" : "rgba(96, 165, 250, 0.42)";
     ctx.lineWidth = isMovingFace ? 3 : 1.2;
     ctx.beginPath();
     face.projected.forEach((p, index) => {
@@ -1290,13 +1290,13 @@ function renderDesigner() {
   const rect = fitCanvas(designerCanvas, designerCtx);
   clear(designerCtx, rect);
   designerCtx.save();
-  designerCtx.fillStyle = "#f7fafc";
+  designerCtx.fillStyle = "#111827";
   designerCtx.fillRect(0, 0, rect.width, rect.height);
   drawDesignerGrid(rect);
   const pts = state.customPoints.map((p) => designerToScreen(p, rect));
 
   designerCtx.fillStyle = "rgba(201, 75, 75, 0.18)";
-  designerCtx.strokeStyle = "#c94b4b";
+  designerCtx.strokeStyle = "#fb7185";
   designerCtx.lineWidth = 2.5;
   designerCtx.beginPath();
   if (pts.length) {
@@ -1318,8 +1318,8 @@ function renderDesigner() {
   }
 
   pts.forEach((p, index) => {
-    designerCtx.fillStyle = index === state.activePoint ? "#2364d2" : "#ffffff";
-    designerCtx.strokeStyle = index === state.activePoint ? "#2364d2" : "#c94b4b";
+    designerCtx.fillStyle = index === state.activePoint ? "#60a5fa" : "#f8fafc";
+    designerCtx.strokeStyle = index === state.activePoint ? "#60a5fa" : "#fb7185";
     designerCtx.lineWidth = 3;
     designerCtx.beginPath();
     designerCtx.arc(p.x, p.y, 7, 0, Math.PI * 2);
@@ -1331,7 +1331,7 @@ function renderDesigner() {
 
 function drawDesignerGrid(rect) {
   const axisX = rect.width * 0.16;
-  designerCtx.strokeStyle = "rgba(92, 102, 122, 0.24)";
+  designerCtx.strokeStyle = "rgba(148, 163, 184, 0.28)";
   designerCtx.lineWidth = 1;
   for (let x = axisX; x < rect.width; x += 24) {
     designerCtx.beginPath();
@@ -1345,7 +1345,7 @@ function drawDesignerGrid(rect) {
     designerCtx.lineTo(rect.width, y);
     designerCtx.stroke();
   }
-  designerCtx.strokeStyle = "rgba(23, 32, 51, 0.55)";
+  designerCtx.strokeStyle = "rgba(226, 232, 240, 0.72)";
   designerCtx.lineWidth = 2;
   designerCtx.setLineDash([7, 6]);
   designerCtx.beginPath();
@@ -1354,7 +1354,7 @@ function drawDesignerGrid(rect) {
   designerCtx.stroke();
   designerCtx.setLineDash([]);
 
-  designerCtx.fillStyle = "rgba(35, 100, 210, 0.18)";
+  designerCtx.fillStyle = "rgba(96, 165, 250, 0.38)";
   for (let x = axisX; x < rect.width; x += 24) {
     for (let y = 0; y < rect.height; y += 24) {
       designerCtx.beginPath();
