@@ -517,8 +517,9 @@ function clear(context, rect) {
 
 function drawGrid(context, rect, centerX, centerY, spacing, alpha = 0.5) {
   context.save();
-  context.strokeStyle = `rgba(116, 132, 158, ${alpha})`;
-  context.lineWidth = 1;
+  const visibleAlpha = Math.max(alpha, 0.34);
+  context.strokeStyle = `rgba(255, 255, 255, ${visibleAlpha})`;
+  context.lineWidth = 1.1;
   for (let x = centerX % spacing; x < rect.width; x += spacing) {
     context.beginPath();
     context.moveTo(x, 0);
@@ -604,9 +605,9 @@ function drawLineToSurface(rect) {
 
   drawGrid(ctx, rect, cx, cy, 42, 0.23);
   ctx.save();
-  ctx.fillStyle = "rgba(22, 122, 98, 0.16)";
-  ctx.strokeStyle = "rgba(22, 122, 98, 0.55)";
-  ctx.lineWidth = 2;
+  ctx.fillStyle = "rgba(125, 211, 252, 0.52)";
+  ctx.strokeStyle = "rgba(186, 230, 253, 0.92)";
+  ctx.lineWidth = 2.5;
   ctx.fillRect(left, top, sweep, height);
   ctx.strokeRect(left, top, sweep, height);
 
